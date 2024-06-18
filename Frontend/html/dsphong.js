@@ -37,7 +37,6 @@ document.addEventListener('DOMContentLoaded', function() {
             var newRoom = {
                 id: rooms.length + 1, // Tạo id mới dựa trên số lượng phòng hiện có
                 name: 'Phòng ' + roomNumber,
-                type: roomType,
                 status: roomStatus,
                 price: 2170000 // Giả định giá phòng cố định cho tất cả các phòng mới
             };
@@ -47,7 +46,6 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (mode === 'edit' && index !== null) {
             // Cập nhật thông tin phòng đã có
             rooms[index].name = 'Phòng ' + roomNumber;
-            rooms[index].type = roomType;
             rooms[index].status = roomStatus;
         }
 
@@ -176,5 +174,126 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+	// Đảm bảo filterRooms() được gọi khi các giá trị bộ lọc thay đổi hoặc khi người dùng tìm kiếm
+document.getElementById('searchForm').addEventListener('submit', function(event) {
+    event.preventDefault();
     filterRooms();
+});
+
+document.getElementById('roomTypeFilter').addEventListener('change', filterRooms);
+document.getElementById('roomStatusFilter').addEventListener('change', filterRooms);
+
+// Hàm lọc và hiển thị danh sách phòng
+function filterRooms() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const roomType = document.getElementById('roomTypeFilter').value;
+    const roomStatus = document.getElementById('roomStatusFilter').value;
+
+    const filteredRooms = rooms.filter(room => {
+        const matchesSearch = room.name.toLowerCase().includes(searchTerm) ||
+                              room.type.toLowerCase().includes(searchTerm) ||
+                              room.status.toLowerCase().includes(searchTerm);
+        const matchesType = roomType === 'all' || room.type === roomType;
+        const matchesStatus = roomStatus === 'all' || room.status === roomStatus;
+
+        return matchesSearch && matchesType && matchesStatus;
+    });
+
+    // Sắp xếp lại danh sách phòng theo số phòng trong tên
+    const sortedRooms = sortRoomsByName(filteredRooms);
+
+    // Hiển thị danh sách phòng đã lọc và sắp xếp
+    displayRooms(sortedRooms);
+}
+
+// Hàm sắp xếp danh sách phòng theo số phòng trong tên
+function sortRoomsByName(rooms) {
+    return rooms.sort((a, b) => {
+        const numberA = extractRoomNumber(a.name);
+        const numberB = extractRoomNumber(b.name);
+        return numberA - numberB;
+    });
+}
+
+// Hàm trích xuất số phòng từ tên phòng
+function extractRoomNumber(roomName) {
+    const matches = roomName.match(/\d+/);
+    return matches ? parseInt(matches[0]) : Infinity;
+}
+
+// Hàm hiển thị danh sách phòng
+function displayRooms(filteredRooms) {
+    const roomList = document.getElementById('roomList');
+    roomList.innerHTML = '';
+
+    filteredRooms.forEach((room, index) => {
+        const roomDiv = document.createElement('div');
+        roomDiv.className = 'col-md-4 room-grid';
+        roomDiv.innerHTML = `
+            <div class="room-product-main">
+                <div class="room-product-bottom">
+                    <h3><a href="#?id=${room.id}">${room.name}</a></h3>
+                    <p>Loại: ${room.type}</p>
+                    <p>Giá: ${formatCurrency(room.price)}</p>
+                    <p>Tình trạng: ${room.status === 'available' ? 'Còn trống' : 'Không còn trống'}</p>
+                    <button class="btn btn-danger delete-room" data-index="${index}">Xóa</button>
+                    <button class="btn btn-primary edit-room" style="margin-left: 10px;" data-index="${index}">Sửa</button>
+                </div>
+            </div>
+        `;
+        roomList.appendChild(roomDiv);
+    });
+
+    // Thêm sự kiện xóa và sửa cho từng phòng
+    addDeleteEventListeners();
+    addEditEventListeners();
+}
+
+// Hàm định dạng số tiền sang VNĐ
+function formatCurrency(amount) {
+    // Chuyển số thành chuỗi, ngăn cách hàng nghìn bằng dấu phẩy
+    const parts = amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return `${parts} VNĐ`;
+}
+
+// Hàm xử lý sự kiện xóa phòng
+function addDeleteEventListeners() {
+    const deleteButtons = document.querySelectorAll('.delete-room');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const index = parseInt(this.getAttribute('data-index'));
+            const roomName = rooms[index].name;
+
+            // Xác nhận xóa phòng
+            if (confirm(`Bạn chắc chắn muốn xóa '${roomName}'?`)) {
+                rooms.splice(index, 1);
+                filterRooms(); // Cập nhật lại danh sách phòng sau khi xóa
+            }
+        });
+    });
+}
+
+// Hàm xử lý sự kiện sửa phòng
+function addEditEventListeners() {
+    const editButtons = document.querySelectorAll('.edit-room');
+    editButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const index = parseInt(this.getAttribute('data-index'));
+            const room = rooms[index];
+
+            // Hiển thị modal chỉnh sửa phòng và điền thông tin phòng vào form
+            $('#addRoomModal').modal('show');
+            document.getElementById('addRoomForm').setAttribute('data-mode', 'edit');
+            document.getElementById('addRoomForm').setAttribute('data-index', index);
+
+            // Điền thông tin phòng vào form
+            document.getElementById('roomNumber').value = extractRoomNumber(room.name);
+            document.getElementById('roomType').value = room.type;
+            document.getElementById('roomStatus').value = room.status;
+        });
+    });
+}
+
+filterRooms();
+
 });
