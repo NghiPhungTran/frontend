@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Mảng người thuê giả định ban đầu
     var tenants = [
-        { id: 1, cmnd: '123456789', name: 'Nguyễn Văn A', dob: '1990-01-01', phone: '0901234567', room: '101' },
-        { id: 2, cmnd: '987654321', name: 'Trần Thị B', dob: '1992-02-02', phone: '0909876543', room: '102' }
+        { id: 1, cmnd: '123456789', name: 'Nguyễn Văn A', dob: '1990-01-01', phone: '0901234567', room: '101', contractStartDate: '2023-01-01', contractEndDate: '2023-12-31' },
+        { id: 2, cmnd: '987654321', name: 'Trần Thị B', dob: '1992-02-02', phone: '0909876543', room: '102', contractStartDate: '2023-02-01', contractEndDate: '2023-11-30' }
     ];
 
     // Hiển thị danh sách người thuê khi trang được tải
@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', function() {
         var tenantDOB = document.getElementById('tenantDOB').value;
         var tenantPhone = document.getElementById('tenantPhone').value;
         var tenantRoom = document.getElementById('tenantRoom').value;
+        var contractStartDate = document.getElementById('contractStartDate').value;
+        var contractEndDate = document.getElementById('contractEndDate').value;
 
         // Lấy chế độ của form (thêm mới hoặc sửa)
         var mode = this.getAttribute('data-mode');
@@ -38,7 +40,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 name: tenantName,
                 dob: tenantDOB,
                 phone: tenantPhone,
-                room: tenantRoom
+                room: tenantRoom,
+                contractStartDate: contractStartDate,
+                contractEndDate: contractEndDate
             };
 
             // Thêm người thuê mới vào mảng tenants
@@ -50,6 +54,8 @@ document.addEventListener('DOMContentLoaded', function() {
             tenants[index].dob = tenantDOB;
             tenants[index].phone = tenantPhone;
             tenants[index].room = tenantRoom;
+            tenants[index].contractStartDate = contractStartDate;
+            tenants[index].contractEndDate = contractEndDate;
         }
 
         // Đóng modal sau khi thêm hoặc sửa thành công
@@ -89,6 +95,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         <p>Ngày sinh: ${formatDate(tenant.dob)}</p>
                         <p>Số điện thoại: ${tenant.phone}</p>
                         <p>Số phòng: ${tenant.room}</p>
+                        <p>Ngày bắt đầu hợp đồng: ${formatDate(tenant.contractStartDate)}</p>
+                        <p>Ngày kết thúc hợp đồng: ${formatDate(tenant.contractEndDate)}</p>
                         <button class="btn btn-primary btn-sm edit-btn" data-index="${index}">Sửa</button>
                         <button class="btn btn-danger btn-sm delete-btn" data-index="${index}">Xóa</button>
                     </div>
@@ -96,8 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             tenantListDiv.appendChild(tenantDiv);
         });
-		
-
+        
         // Bắt sự kiện click vào nút "Sửa"
         document.querySelectorAll('.edit-btn').forEach(function(button) {
             button.addEventListener('click', function() {
@@ -109,6 +116,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('tenantDOB').value = tenant.dob;
                 document.getElementById('tenantPhone').value = tenant.phone;
                 document.getElementById('tenantRoom').value = tenant.room;
+                document.getElementById('contractStartDate').value = tenant.contractStartDate;
+                document.getElementById('contractEndDate').value = tenant.contractEndDate;
 
                 $('#addTenantModal').modal('show');
                 document.getElementById('addTenantForm').setAttribute('data-mode', 'edit');
@@ -128,18 +137,16 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-	
+
     // Bắt sự kiện submit của form tìm kiếm
     document.getElementById('searchForm').addEventListener('submit', function(event) {
         event.preventDefault();
         loadTenantList();
     });
-	document.getElementById('searchFormRoom').addEventListener('submit', function(event) {
-    event.preventDefault();
-    loadTenantList();
-});
-
-	
+    document.getElementById('searchFormRoom').addEventListener('submit', function(event) {
+        event.preventDefault();
+        loadTenantList();
+    });
 
     // Hàm định dạng ngày tháng theo định dạng ngày-tháng-năm
     function formatDate(dateString) {
